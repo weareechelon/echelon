@@ -64,13 +64,7 @@
     display: flex; align-items: center; justify-content: center;
     text-align: center;
     overflow: hidden;
-    background: linear-gradient(
-      180deg,
-      #FFFFFF   0%,
-      #FFFFFF  78%,
-      #181818  92%,
-      #0F0F0F 100%
-    );
+    background: var(--bg);
   }
   /* Fade into builds section */
   #hero::after {
@@ -92,8 +86,8 @@
     display: inline-block;
     font-size: 11px; font-weight: 600; letter-spacing: 3px;
     text-transform: uppercase;
-    color: #7B6B00;
-    border: 1px solid rgba(180,150,0,.35);
+    color: #D4AF37;
+    border: 1px solid rgba(212,175,55,.3);
     padding: 5px 14px; border-radius: 20px;
     margin-bottom: 28px;
     background: rgba(212,175,55,.08);
@@ -104,38 +98,38 @@
     line-height: 1.08;
     letter-spacing: -1.5px;
     margin-bottom: 24px;
-    color: #0F0F0F;
+    color: #F5F5F0;
   }
   h1 span {
-    background: linear-gradient(135deg, #B8860B 0%, #D4AF37 100%);
+    background: linear-gradient(135deg, #D4AF37 0%, #F5D875 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   }
   .hero-sub {
-    font-size: 18px; color: #4a5568; max-width: 520px; margin: 0 auto 40px;
+    font-size: 18px; color: var(--gray2); max-width: 520px; margin: 0 auto 40px;
     line-height: 1.7;
   }
   .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
   .btn-primary {
     display: inline-block;
-    background: linear-gradient(135deg, #D4AF37, #B8860B); color: #fff;
+    background: linear-gradient(135deg, #D4AF37, #B8860B); color: #0F0F0F;
     padding: 14px 32px; border-radius: 8px;
-    font-size: 15px; font-weight: 600; text-decoration: none;
+    font-size: 15px; font-weight: 700; text-decoration: none;
     transition: opacity .2s, transform .2s;
-    box-shadow: 0 4px 20px rgba(212,175,55,0.25);
+    box-shadow: 0 4px 24px rgba(212,175,55,0.35);
   }
   .btn-primary:hover { opacity: .88; transform: translateY(-1px); }
   .btn-ghost {
     display: inline-block;
-    border: 1px solid rgba(139,103,0,0.35); color: #3D3000;
+    border: 1px solid rgba(212,175,55,0.3); color: var(--gray1);
     padding: 14px 32px; border-radius: 8px;
     font-size: 15px; font-weight: 500; text-decoration: none;
     transition: border-color .2s, color .2s, background .2s;
   }
-  .btn-ghost:hover { border-color: #D4AF37; color: #B8860B; background: rgba(212,175,55,0.06); }
+  .btn-ghost:hover { border-color: #D4AF37; color: #D4AF37; background: rgba(212,175,55,0.06); }
   .scroll-hint {
     position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
     display: flex; flex-direction: column; align-items: center; gap: 6px;
-    color: #94a3b8; font-size: 11px; letter-spacing: 2px;
+    color: var(--gray3); font-size: 11px; letter-spacing: 2px;
     text-transform: uppercase; z-index: 3;
     animation: bobble 2s ease-in-out infinite;
   }
@@ -606,7 +600,7 @@
 
 <!-- NAV -->
 <nav>
-  <img src="echelon-logo-dark.svg" alt="Echelon">
+  <span style="font-size:15px;font-weight:800;letter-spacing:5px;color:#F5F5F0;text-transform:uppercase;font-family:'Inter',sans-serif;">ECHELON</span>
   <ul>
     <li><a href="#builds">Builds</a></li>
     <li><a href="#problem">The Gap</a></li>
@@ -1538,7 +1532,7 @@ if (archDiagram) archObserver.observe(archDiagram);
 
 <!-- FOOTER -->
 <footer>
-  <img src="echelon-logo-dark.svg" alt="Echelon">
+  <span style="font-size:13px;font-weight:800;letter-spacing:4px;color:rgba(245,245,240,0.5);text-transform:uppercase;font-family:'Inter',sans-serif;">ECHELON</span>
   <div class="footer-links">
     <a href="#problem">The Gap</a>
     <a href="#howitworks">Process</a>
@@ -1575,11 +1569,7 @@ if (archDiagram) archObserver.observe(archDiagram);
     }
   }
 
-  // Returns how "dark" the bg is at a given y (0=white top, 1=dark bottom)
-  function darknessFactor(y) {
-    const t = Math.max(0, Math.min(1, (y / H - 0.75) / 0.22));
-    return t;
-  }
+  function darknessFactor(y) { return 1; }
 
   function draw() {
     ctx.clearRect(0, 0, W, H);
