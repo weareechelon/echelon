@@ -457,6 +457,7 @@ let sortField = 'created_at', sortDir = 'desc';
 let searchQuery = '';
 let pendingCSVRows = [], pendingCSVHeaders = [], pendingCSVSamples = [];
 let csvFileInput = null;
+let editingLeadId = null; // tracks which lead is being edited (never rely on hidden input alone)
 
 // Column visibility (persisted)
 const ALL_COLS = ['name','title','company','email','phone','status','owner','source','industry','location','linkedin_url','num_employees','last_activity_date','created_at','tags','actions'];
@@ -799,6 +800,7 @@ function closeDetail() {
 // ADD / EDIT MODAL
 // ================================================================
 function openAddModal() {
+    editingLeadId = null;
     document.getElementById('modalTitle').textContent = 'Add Lead';
     document.getElementById('leadId').value = '';
     document.getElementById('leadForm').reset();
@@ -809,6 +811,7 @@ function openAddModal() {
 function openEditModal(id) {
     const l = allLeads.find(x => x.id === id);
     if (!l) return;
+    editingLeadId = id;
     document.getElementById('modalTitle').textContent = 'Edit Lead';
     document.getElementById('leadId').value = id;
     FORM_FIELDS.forEach(f => { const el = document.getElementById('f_'+f); if(el) el.value = l[f]||''; });
@@ -817,13 +820,14 @@ function openEditModal(id) {
 }
 
 function closeModal() {
+    editingLeadId = null;
     document.getElementById('modalOverlay').style.display = 'none';
     document.getElementById('modalPanel').style.display = 'none';
 }
 
 async function handleFormSubmit(e) {
     e.preventDefault();
-    const id = document.getElementById('leadId').value;
+    const id = editingLeadId; // use JS variable, not the hidden input
     const lead = {};
     FORM_FIELDS.forEach(f => { lead[f] = document.getElementById('f_'+f).value || null; });
     lead.last_activity_date = new Date().toISOString();
@@ -1071,7 +1075,10 @@ function openMapper(text, filename) {
         </div>`;
     }).join('');
 
-    document.getElementById('mapperImportBtn').textContent = `Import ${dataRows.length.toLocaleString()} leads`;
+    const importBtn = document.getElementById('mapperImportBtn');
+    importBtn.textContent = `Import ${dataRows.length.toLocaleString()} leads`;
+    importBtn.style.display = '';
+    importBtn.onclick = runImport;
     document.getElementById('dupWarning').style.display = 'none';
     document.getElementById('mapperOverlay').style.display = 'block';
     document.getElementById('mapperBox').style.display = 'flex';
@@ -1113,18 +1120,61 @@ async function runImport() {
     if (!leads.length) { showToast('No valid leads found after mapping','error'); return; }
 
     // Duplicate check by email
-    const existingEmails = new Set(allLeads.map(l=>l.email).filter(Boolean).map(e=>e.toLowerCase()));
-    const dupes = leads.filter(l=>l.email && existingEmails.has(l.email.toLowerCase()));
+    const emailToId = {};
+    allLeads.forEach(l => { if(l.email) emailToId[l.email.toLowerCase()] = l.id; });
+    const dupes = leads.filter(l => l.email && emailToId[l.email.toLowerCase()]);
+
     if (dupes.length) {
         const w = document.getElementById('dupWarning');
-        w.textContent = `⚠ ${dupes.length} lead(s) have emails already in your database. They will still be imported.`;
+        w.innerHTML = `⚠ ${dupes.length} lead(s) match existing emails. How would you like to handle them?
+            <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+                <button class="btn btn-primary" style="font-size:.8rem; padding:6px 12px;" onclick="doSmartImport(window._pendingLeads, window._pendingEmailMap)">
+                    Update existing + import new
+                </button>
+                <button class="btn btn-secondary" style="font-size:.8rem; padding:6px 12px;" onclick="doInsert(window._pendingLeads)">
+                    Import all as new records
+                </button>
+            </div>`;
         w.style.display = 'block';
-        document.getElementById('mapperImportBtn').textContent = `Import ${leads.length} leads anyway`;
-        document.getElementById('mapperImportBtn').onclick = () => doInsert(leads);
+        document.getElementById('mapperImportBtn').style.display = 'none';
+        window._pendingLeads = leads;
+        window._pendingEmailMap = emailToId;
         return;
     }
 
     await doInsert(leads);
+}
+
+async function doSmartImport(leads, emailToId) {
+    closeMapper();
+    const toUpdate = leads.filter(l => l.email && emailToId[l.email.toLowerCase()]);
+    const toInsert = leads.filter(l => !l.email || !emailToId[l.email.toLowerCase()]);
+    let updated = 0, inserted = 0;
+
+    showLoading(true, `Updating ${toUpdate.length} + importing ${toInsert.length} leads...`);
+
+    for (const lead of toUpdate) {
+        const id = emailToId[lead.email.toLowerCase()];
+        const { error } = await db.from('leads').update({ ...lead, updated_at: new Date().toISOString() }).eq('id', id);
+        if (!error) {
+            const i = allLeads.findIndex(l => l.id === id);
+            if (i !== -1) allLeads[i] = { ...allLeads[i], ...lead };
+            updated++;
+        }
+    }
+
+    if (toInsert.length) {
+        const BATCH = 200;
+        for (let i=0; i<toInsert.length; i+=BATCH) {
+            const { data, error } = await db.from('leads').insert(toInsert.slice(i, i+BATCH)).select();
+            if (!error) { allLeads = [...(data||[]), ...allLeads]; inserted += (data||[]).length; }
+        }
+    }
+
+    showLoading(false);
+    populateIndustryFilter();
+    applyFilters();
+    showToast(`Updated ${updated}, imported ${inserted} leads`);
 }
 
 async function doInsert(leads) {
