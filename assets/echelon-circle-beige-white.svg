@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" width="1080" height="1080">
+  <defs>
+    <clipPath id="circle">
+      <circle cx="540" cy="540" r="540"/>
+    </clipPath>
+  </defs>
+  <circle cx="540" cy="540" r="540" fill="#F7F6F3"/>
+  <text
+    x="540"
+    y="580"
+    font-family="Inter, Arial, sans-serif"
+    font-weight="800"
+    font-size="96"
+    fill="#FFFFFF"
+    text-anchor="middle"
+    letter-spacing="24"
+    clip-path="url(#circle)"
+  >ECHELON</text>
+</svg>
