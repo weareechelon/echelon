@@ -91,12 +91,14 @@
     display: flex; align-items: flex-start; justify-content: center;
   }
   #agentCanvas {
-    width: 100%; max-width: 100%; height: auto;
-    border-radius: 16px;
-    border: 1px solid rgba(0,0,0,0.08);
-    background: rgba(247,246,243,0.8);
-    backdrop-filter: blur(12px);
+    width: 100%;
+    height: auto; /* derives from internal DPR-scaled buffer — stays crisp at all sizes */
     display: block;
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.07);
+    background: rgba(247,246,243,0.85);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.05);
   }
   @media (max-width: 900px) {
     .hero-inner { grid-template-columns: 1fr; padding: 100px 24px 60px; gap: 48px; }
@@ -1715,23 +1717,33 @@ const barObserver = new IntersectionObserver(entries => {
 const barsSection = document.getElementById('opcost');
 if (barsSection) barObserver.observe(barsSection);
 
-// ── AGENT WORKFLOW CANVAS — Live Production Dashboard ──
+// ── AGENT WORKFLOW CANVAS ──
+// Self-contained module — drop into React via useEffect(()=>{ ... return ()=>cancelAnimationFrame(raf); },[])
 (function(){
   const canvas = document.getElementById('agentCanvas');
   if (!canvas) return;
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { alpha: true });
+
+  // HiDPI / Retina — renders at full device pixel density (2× on Retina, 3× on mobile)
+  const DPR = Math.min(window.devicePixelRatio || 1, 3);
 
   const CW=560, PAD=24;
   const CARD_W=518, CARD_H=560;
-  // 3 stacked cards — each offset 12px right/down from the one in front
-  const STACK = [{x:8,y:4},{x:20,y:16},{x:32,y:28}]; // front→back
+  const STACK = [{x:8,y:4},{x:20,y:16},{x:32,y:28}];
   const CH = STACK[2].y + CARD_H + 28;
-  canvas.width=CW; canvas.height=CH;
+
+  canvas.width  = CW * DPR;
+  canvas.height = CH * DPR;
+  ctx.scale(DPR, DPR); // all draw calls use logical px — DPR handled here
+
+  // Crisp text rendering
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
 
   const GOLD='#C9A227';
   const GA=a=>`rgba(201,162,39,${a})`;
   const WA=a=>`rgba(15,15,15,${a})`;
-  const ALPHA=[1.0,0.55,0.28]; // front→back opacity
+  const ALPHA=[1.0,0.55,0.28];
 
   function rr(x,y,w,h,r){
     ctx.beginPath();
