@@ -6,8 +6,6 @@
 <title>Echelon — AI Operations</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="https://calendar.google.com/calendar/scheduling-button-script.css" rel="stylesheet">
-<script src="https://calendar.google.com/calendar/scheduling-button-script.js" async></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -739,64 +737,57 @@
   <div class="section-inner" style="text-align: center;">
     <div class="section-tag reveal">Let's Build</div>
     <h2 class="reveal">Book a discovery call.<br><span>No decks. No demos.</span></h2>
-    <p class="reveal" style="font-size:17px; color:var(--gray2); max-width:480px; margin: 0 auto 56px; line-height:1.7;">
+    <p class="reveal" style="font-size:17px; color:var(--gray2); max-width:480px; margin: 0 auto 48px; line-height:1.7;">
       Pick a time that works. We'll talk through your ops and figure out if agentic infrastructure changes the math for you.
     </p>
-    <div class="reveal" style="display:flex; gap:24px; justify-content:center; flex-wrap:wrap; max-width:800px; margin:0 auto 32px;">
-
-      <!-- Lauren card -->
-      <div style="
-        flex:1; min-width:280px; max-width:360px;
-        background: var(--bg);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 14px;
-        padding: 36px 32px;
-        display: flex; flex-direction: column; align-items: center; gap: 8px;
-      ">
-        <div style="font-size:32px; margin-bottom:4px;">👩‍💼</div>
-        <div style="font-size:16px; font-weight:700; color:#fff;">Lauren</div>
-        <div style="font-size:11px; font-weight:600; letter-spacing:2.5px; text-transform:uppercase; color:var(--violet2); margin-bottom:16px;">CEO</div>
-        <span id="btn-lauren"></span>
+    <div class="reveal" style="max-width:900px; margin: 0 auto;">
+      <div style="display:flex; gap:0; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-bottom:none; border-radius:12px 12px 0 0; overflow:hidden; width:fit-content; margin: 0 auto;">
+        <button onclick="switchCal('lauren')" id="tab-lauren" style="
+          padding: 10px 24px; border: none; cursor: pointer; font-family: inherit;
+          font-size: 13px; font-weight: 600; letter-spacing: .5px;
+          background: var(--violet); color: #fff;
+        ">Lauren <span style="font-weight:400;opacity:.75;font-size:11px;">CEO</span></button>
+        <button onclick="switchCal('rc')" id="tab-rc" style="
+          padding: 10px 24px; border: none; cursor: pointer; font-family: inherit;
+          font-size: 13px; font-weight: 600; letter-spacing: .5px;
+          background: transparent; color: var(--gray2);
+        ">Rolandger <span style="font-weight:400;opacity:.75;font-size:11px;">COO</span></button>
       </div>
-
-      <!-- RC card -->
-      <div style="
-        flex:1; min-width:280px; max-width:360px;
-        background: var(--bg);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 14px;
-        padding: 36px 32px;
-        display: flex; flex-direction: column; align-items: center; gap: 8px;
-      ">
-        <div style="font-size:32px; margin-bottom:4px;">👨‍💼</div>
-        <div style="font-size:16px; font-weight:700; color:#fff;">Rolandger</div>
-        <div style="font-size:11px; font-weight:600; letter-spacing:2.5px; text-transform:uppercase; color:var(--violet2); margin-bottom:16px;">COO</div>
-        <span id="btn-rc"></span>
+      <div style="background:#fff; border:1px solid rgba(255,255,255,0.08); border-radius:0 12px 12px 12px; overflow:hidden; box-shadow:0 24px 80px rgba(0,0,0,0.4);">
+        <iframe id="cal-lauren"
+          src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ3jEc72X_UpOFWxViMPcDsSGsSmn1YibjeTo9zWdRKm08VJV-of2TzCcKhXCVr_pdz4mPEqDJhI?gv=true"
+          style="width:100%; height:420px; border:none; display:block;"
+          frameborder="0" title="Book a call with Lauren"
+        ></iframe>
+        <iframe id="cal-rc"
+          src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ0qfDefLVSN0yd4w_wXwMGuZ9IE15A4NvbP_cjC0Wu1bZM3rq6kpSI39XY71_4poRTZ6LW7kDRl?gv=true"
+          style="width:100%; height:420px; border:none; display:none;"
+          frameborder="0" title="Book a call with Rolandger"
+        ></iframe>
       </div>
-
     </div>
-    <p style="font-size:13px; color:var(--gray3);">
+    <p style="font-size:13px; color:var(--gray3); margin-top:20px;">
       Prefer email? <a href="mailto:Laurenocampo.biz@gmail.com" style="color:var(--violet2); text-decoration:none;">Laurenocampo.biz@gmail.com</a>
     </p>
   </div>
 </section>
 
 <script>
-window.addEventListener('load', function() {
-  if (typeof calendar === 'undefined' || !calendar.schedulingButton) return;
-  calendar.schedulingButton.load({
-    url: 'https://calendar.google.com/calendar/appointments/schedules/AcZssZ3jEc72X_UpOFWxViMPcDsSGsSmn1YibjeTo9zWdRKm08VJV-of2TzCcKhXCVr_pdz4mPEqDJhI?gv=true',
-    color: '#6C63FF',
-    label: 'Book a call',
-    target: document.getElementById('btn-lauren'),
-  });
-  calendar.schedulingButton.load({
-    url: 'https://calendar.google.com/calendar/appointments/schedules/AcZssZ0qfDefLVSN0yd4w_wXwMGuZ9IE15A4NvbP_cjC0Wu1bZM3rq6kpSI39XY71_4poRTZ6LW7kDRl?gv=true',
-    color: '#6C63FF',
-    label: 'Book a call',
-    target: document.getElementById('btn-rc'),
-  });
-});
+function switchCal(who) {
+  const tLauren = document.getElementById('tab-lauren');
+  const tRc     = document.getElementById('tab-rc');
+  const cLauren = document.getElementById('cal-lauren');
+  const cRc     = document.getElementById('cal-rc');
+  if (who === 'lauren') {
+    tLauren.style.background = 'var(--violet)'; tLauren.style.color = '#fff';
+    tRc.style.background = 'transparent'; tRc.style.color = 'var(--gray2)';
+    cLauren.style.display = 'block'; cRc.style.display = 'none';
+  } else {
+    tRc.style.background = 'var(--violet)'; tRc.style.color = '#fff';
+    tLauren.style.background = 'transparent'; tLauren.style.color = 'var(--gray2)';
+    cRc.style.display = 'block'; cLauren.style.display = 'none';
+  }
+}
 </script>
 
 <!-- FOOTER -->
