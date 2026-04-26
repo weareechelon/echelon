@@ -1143,7 +1143,7 @@
           <li><span class="check">✓</span> Monthly performance review</li>
           <li><span class="check">✓</span> 5 support tickets/mo included</li>
         </ul>
-        <button class="tier-btn" onclick="startCheckout('maintain', this)">Get started</button>
+        <a href="https://wise.com/pay/r/Qmj5MIfBRzdw1oA" target="_blank" class="tier-btn">Get started</a>
       </div>
 
       <div class="tier-card featured reveal reveal-delay-1">
@@ -1159,7 +1159,7 @@
           <li><span class="check">✓</span> Memory layer + context persistence</li>
           <li><span class="check">✓</span> 2 improvement cycles/mo</li>
         </ul>
-        <button class="tier-btn" onclick="startCheckout('build', this)">Get started</button>
+        <a href="https://wise.com/pay/r/g_h_zWFOMBhiKK0" target="_blank" class="tier-btn">Get started</a>
       </div>
 
       <div class="tier-card reveal reveal-delay-2">
@@ -1175,7 +1175,7 @@
           <li><span class="check">✓</span> Proactive stack audits</li>
           <li><span class="check">✓</span> Priority response SLA (&lt;4h)</li>
         </ul>
-        <button class="tier-btn" onclick="startCheckout('compound', this)">Get started</button>
+        <a href="https://wise.com/pay/r/fyjcuH_crPILd3E" target="_blank" class="tier-btn">Get started</a>
       </div>
 
     </div>
@@ -1974,35 +1974,6 @@ if (barsSection) barObserver.observe(barsSection);
   requestAnimationFrame(ts=>{stateStart=lastTs=ts;requestAnimationFrame(draw);});
 })();
 
-</script>
-
-<script>
-const CHECKOUT_API = 'https://echelon-production-aa4f.up.railway.app/api/checkout';
-
-async function startCheckout(tier, btn) {
-  const original = btn.textContent;
-  btn.textContent = 'Loading...';
-  btn.disabled = true;
-
-  try {
-    const res = await fetch(CHECKOUT_API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tier })
-    });
-    const data = await res.json();
-    if (data.checkout_url) {
-      window.location.href = data.checkout_url;
-    } else {
-      throw new Error('No checkout URL returned');
-    }
-  } catch (err) {
-    console.error('Checkout error:', err);
-    btn.textContent = original;
-    btn.disabled = false;
-    alert('Something went wrong. Please try again or email us at Laurenocampo.biz@gmail.com');
-  }
-}
 </script>
 </body>
 </html>
