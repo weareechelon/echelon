@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leads — Echelon</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        .sidebar-icon { display: flex; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; color: #9ca3af; cursor: pointer; transition: all 0.15s; }
+        .sidebar-icon:hover { background: #f3f4f6; color: #374151; }
+        .sidebar-icon.active { background: #eef2ff; color: #4f46e5; }
+        .status-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 500; white-space: nowrap; }
+        .table-header { padding: 12px 16px; text-align: left; font-size: 0.7rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; user-select: none; white-space: nowrap; }
+        .table-header:hover { background: #f9fafb; }
+        .table-cell { padding: 12px 16px; font-size: 0.85rem; color: #374151; white-space: nowrap; }
+        .btn-primary { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: #4f46e5; color: white; font-size: 0.85rem; font-weight: 500; border-radius: 8px; cursor: pointer; transition: background 0.15s; border: none; }
+        .btn-primary:hover { background: #4338ca; }
+        .btn-secondary { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: white; color: #374151; font-size: 0.85rem; font-weight: 500; border-radius: 8px; border: 1px solid #d1d5db; cursor: pointer; transition: background 0.15s; }
+        .btn-secondary:hover { background: #f9fafb; }
+        .form-input { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.85rem; outline: none; transition: border-color 0.15s, box-shadow 0.15s; font-family: 'Inter', sans-serif; }
+        .form-input:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .form-label { display: block; font-size: 0.7rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+        .truncate-cell { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; }
+        tr.selected td { background: #eef2ff; }
+        tr:hover td { background: #fafafa; }
+        tr.selected:hover td { background: #e0e7ff; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        .slide-panel { transition: transform 0.25s ease; }
+    </style>
+</head>
+<body style="background:#f9fafb; height:100vh; display:flex; overflow:hidden;">
+
+<!-- ===== LEFT SIDEBAR ===== -->
+<div style="width:64px; background:white; border-right:1px solid #e5e7eb; display:flex; flex-direction:column; align-items:center; padding:16px 0; gap:4px; flex-shrink:0; z-index:10;">
+    <!-- Logo -->
+    <div style="width:40px; height:40px; background:#4f46e5; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:12px;">
+        <span style="color:white; font-weight:700; font-size:14px;">E</span>
+    </div>
+    <div class="sidebar-icon active" title="People" onclick="activateSidebar(this)">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    </div>
+    <div class="sidebar-icon" title="Companies" onclick="activateSidebar(this)">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 00-1-1h-2a1 1 0 00-1 1v5m4 0H9"/></svg>
+    </div>
+    <div class="sidebar-icon" title="Sequences" onclick="activateSidebar(this)">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+    </div>
+    <div class="sidebar-icon" title="Tasks" onclick="activateSidebar(this)">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+    </div>
+    <div class="sidebar-icon" title="Analytics" onclick="activateSidebar(this)">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+    </div>
+    <div style="flex:1;"></div>
+    <div class="sidebar-icon" title="Settings">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    </div>
+</div>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+
+    <!-- TOP BAR -->
+    <div style="background:white; border-bottom:1px solid #e5e7eb; padding:12px 24px; display:flex; align-items:center; gap:16px; flex-shrink:0;">
+        <h1 style="font-size:1.1rem; font-weight:600; color:#111827; white-space:nowrap;">People</h1>
+        <div style="flex:1; max-width:480px; position:relative;">
+            <svg style="position:absolute; left:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:#9ca3af;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <input type="text" id="searchInput" placeholder="Search people..."
+                style="width:100%; padding:8px 12px 8px 36px; border:1px solid #d1d5db; border-radius:8px; font-size:0.85rem; outline:none; font-family:'Inter',sans-serif;"
+                oninput="handleSearch()"
+                onfocus="this.style.borderColor='#4f46e5'; this.style.boxShadow='0 0 0 3px rgba(79,70,229,0.1)';"
+                onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none';">
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">
+            <button onclick="toggleFilters()" class="btn-secondary" id="filterBtn">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/></svg>
+                Filters
+            </button>
+            <label class="btn-secondary" style="cursor:pointer;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                Import CSV
+                <input type="file" accept=".csv" style="display:none;" onchange="importCSV(event)">
+            </label>
+            <button onclick="exportCSV()" class="btn-secondary">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Export
+            </button>
+            <button onclick="openAddModal()" class="btn-primary">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Add Lead
+            </button>
+        </div>
+    </div>
+
+    <!-- FILTER PANEL -->
+    <div id="filterPanel" style="display:none; background:white; border-bottom:1px solid #e5e7eb; padding:14px 24px;">
+        <div style="display:flex; align-items:flex-end; gap:16px; flex-wrap:wrap;">
+            <div>
+                <label class="form-label">Status</label>
+                <select id="filterStatus" class="form-input" style="width:auto; min-width:140px;" onchange="applyFilters()">
+                    <option value="">All Statuses</option>
+                    <option>New</option><option>Contacted</option><option>Engaged</option>
+                    <option>Meeting Set</option><option>Qualified</option>
+                    <option>Not Interested</option><option>Won</option><option>Lost</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Owner</label>
+                <select id="filterOwner" class="form-input" style="width:auto; min-width:130px;" onchange="applyFilters()">
+                    <option value="">All Owners</option>
+                    <option>Rc</option><option>Josh</option><option>Lauren</option><option>Chanel</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Source</label>
+                <select id="filterSource" class="form-input" style="width:auto; min-width:130px;" onchange="applyFilters()">
+                    <option value="">All Sources</option>
+                    <option>Alignable</option><option>Facebook</option><option>LinkedIn</option>
+                    <option>Instagram</option><option>Referral</option><option>Website</option><option>Other</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Industry</label>
+                <select id="filterIndustry" class="form-input" style="width:auto; min-width:140px;" onchange="applyFilters()">
+                    <option value="">All Industries</option>
+                </select>
+            </div>
+            <button onclick="clearFilters()" style="font-size:0.8rem; color:#4f46e5; font-weight:500; background:none; border:none; cursor:pointer; padding:8px 0;">Clear all</button>
+        </div>
+    </div>
+
+    <!-- BULK ACTION BAR -->
+    <div id="bulkBar" style="display:none; background:#4f46e5; padding:10px 24px; display:none; align-items:center; gap:20px; flex-shrink:0;">
+        <span id="bulkCount" style="color:white; font-size:0.85rem; font-weight:500;"></span>
+        <button onclick="bulkDelete()" style="color:#fca5a5; font-size:0.85rem; font-weight:500; background:none; border:none; cursor:pointer;">Delete Selected</button>
+        <button onclick="exportCSV()" style="color:#e0e7ff; font-size:0.85rem; font-weight:500; background:none; border:none; cursor:pointer;">Export Selected</button>
+        <div style="margin-left:auto;">
+            <button onclick="clearSelection()" style="color:rgba(255,255,255,0.8); font-size:0.8rem; background:none; border:none; cursor:pointer;">✕ Clear</button>
+        </div>
+    </div>
+
+    <!-- TABLE -->
+    <div style="flex:1; overflow:auto;">
+        <table style="min-width:100%; border-collapse:collapse;">
+            <thead style="background:#f9fafb; position:sticky; top:0; z-index:5;">
+                <tr>
+                    <th style="padding:12px 16px; width:40px;">
+                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()"
+                            style="width:16px; height:16px; accent-color:#4f46e5; cursor:pointer;">
+                    </th>
+                    <th class="table-header" onclick="sortBy('first_name')">Name <span id="sort_first_name"></span></th>
+                    <th class="table-header" onclick="sortBy('title')">Title <span id="sort_title"></span></th>
+                    <th class="table-header" onclick="sortBy('company')">Company <span id="sort_company"></span></th>
+                    <th class="table-header" onclick="sortBy('email')">Email <span id="sort_email"></span></th>
+                    <th class="table-header" onclick="sortBy('phone')">Phone <span id="sort_phone"></span></th>
+                    <th class="table-header" onclick="sortBy('status')">Status <span id="sort_status"></span></th>
+                    <th class="table-header" onclick="sortBy('owner')">Owner <span id="sort_owner"></span></th>
+                    <th class="table-header" onclick="sortBy('source')">Source <span id="sort_source"></span></th>
+                    <th class="table-header" onclick="sortBy('industry')">Industry <span id="sort_industry"></span></th>
+                    <th class="table-header" onclick="sortBy('city')">Location <span id="sort_city"></span></th>
+                    <th class="table-header" onclick="sortBy('linkedin_url')">LinkedIn <span id="sort_linkedin_url"></span></th>
+                    <th class="table-header" onclick="sortBy('num_employees')"># Employees <span id="sort_num_employees"></span></th>
+                    <th class="table-header" onclick="sortBy('last_activity_date')">Last Activity <span id="sort_last_activity_date"></span></th>
+                    <th class="table-header" onclick="sortBy('created_at')">Date Added <span id="sort_created_at"></span></th>
+                    <th class="table-header">Tags</th>
+                    <th class="table-header">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody" style="background:white;"></tbody>
+        </table>
+
+        <!-- Empty state -->
+        <div id="emptyState" style="display:none; flex-direction:column; align-items:center; justify-content:center; padding:80px 20px; text-align:center;">
+            <svg width="48" height="48" fill="none" stroke="#d1d5db" viewBox="0 0 24 24" style="margin-bottom:16px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            <p style="color:#6b7280; font-size:0.9rem; font-weight:500;">No leads found</p>
+            <p style="color:#9ca3af; font-size:0.8rem; margin-top:4px;">Add your first lead or adjust your filters</p>
+            <button onclick="openAddModal()" class="btn-primary" style="margin-top:16px;">Add Lead</button>
+        </div>
+    </div>
+
+    <!-- PAGINATION -->
+    <div style="background:white; border-top:1px solid #e5e7eb; padding:12px 24px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
+        <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:0.8rem; color:#6b7280;">Show</span>
+            <select id="pageSize" onchange="changePageSize()" class="form-input" style="width:auto; padding:4px 8px; font-size:0.8rem;">
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+            <span style="font-size:0.8rem; color:#6b7280;">per page</span>
+        </div>
+        <span id="paginationInfo" style="font-size:0.8rem; color:#6b7280;"></span>
+        <div style="display:flex; align-items:center; gap:4px;">
+            <button onclick="prevPage()" id="prevBtn" disabled
+                style="padding:6px 12px; font-size:0.8rem; border:1px solid #d1d5db; border-radius:6px; background:white; cursor:pointer; color:#374151;">Previous</button>
+            <div id="pageNumbers" style="display:flex; align-items:center; gap:4px;"></div>
+            <button onclick="nextPage()" id="nextBtn" disabled
+                style="padding:6px 12px; font-size:0.8rem; border:1px solid #d1d5db; border-radius:6px; background:white; cursor:pointer; color:#374151;">Next</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== ADD / EDIT MODAL (slide panel) ===== -->
+<div id="modalOverlay" onclick="handleOverlayClick(event)"
+    style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:50; justify-content:flex-end;">
+    <div onclick="event.stopPropagation()"
+        style="background:white; height:100%; width:100%; max-width:480px; display:flex; flex-direction:column; box-shadow:-4px 0 24px rgba(0,0,0,0.12); overflow:hidden;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid #e5e7eb; flex-shrink:0;">
+            <h2 id="modalTitle" style="font-size:1rem; font-weight:600; color:#111827;">Add Lead</h2>
+            <button onclick="closeModal()" style="background:none; border:none; cursor:pointer; color:#9ca3af; padding:4px;">
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div style="flex:1; overflow-y:auto; padding:24px;">
+            <form id="leadForm" onsubmit="handleFormSubmit(event)">
+                <input type="hidden" id="leadId">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                    <div>
+                        <label class="form-label">First Name</label>
+                        <input type="text" id="f_first_name" class="form-input" placeholder="John">
+                    </div>
+                    <div>
+                        <label class="form-label">Last Name</label>
+                        <input type="text" id="f_last_name" class="form-input" placeholder="Doe">
+                    </div>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label class="form-label">Job Title</label>
+                    <input type="text" id="f_title" class="form-input" placeholder="CEO">
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label class="form-label">Company</label>
+                    <input type="text" id="f_company" class="form-input" placeholder="Acme Corp">
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="f_email" class="form-input" placeholder="john@acme.com">
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label class="form-label">Phone</label>
+                    <input type="text" id="f_phone" class="form-input" placeholder="+1 555 000 0000">
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label class="form-label">LinkedIn URL</label>
+                    <input type="url" id="f_linkedin_url" class="form-input" placeholder="https://linkedin.com/in/...">
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:16px;">
+                    <div>
+                        <label class="form-label">City</label>
+                        <input type="text" id="f_city" class="form-input" placeholder="New York">
+                    </div>
+                    <div>
+                        <label class="form-label">State</label>
+                        <input type="text" id="f_state" class="form-input" placeholder="NY">
+                    </div>
+                    <div>
+                        <label class="form-label">Country</label>
+                        <input type="text" id="f_country" class="form-input" placeholder="US">
+                    </div>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label class="form-label">Industry</label>
+                    <input type="text" id="f_industry" class="form-input" placeholder="Marketing">
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label class="form-label"># Employees</label>
+                    <select id="f_num_employees" class="form-input">
+                        <option value="">Select range...</option>
+                        <option>1-10</option><option>11-50</option><option>51-200</option>
+                        <option>201-500</option><option>501-1000</option><option>1000+</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label class="form-label">Status</label>
+                    <select id="f_status" class="form-input">
+                        <option>New</option><option>Contacted</option><option>Engaged</option>
+                        <option>Meeting Set</option><option>Qualified</option>
+                        <option>Not Interested</option><option>Won</option><option>Lost</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label class="form-label">Owner</label>
+                    <select id="f_owner" class="form-input">
+                        <option>Rc</option><option>Josh</option><option>Lauren</option><option>Chanel</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label class="form-label">Source</label>
+                    <select id="f_source" class="form-input">
+                        <option value="">Select...</option>
+                        <option>Alignable</option><option>Facebook</option><option>LinkedIn</option>
+                        <option>Instagram</option><option>Referral</option><option>Website</option><option>Other</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label class="form-label">Tags <span style="font-weight:400; text-transform:none; letter-spacing:0;">(comma-separated)</span></label>
+                    <input type="text" id="f_tags" class="form-input" placeholder="warm-lead, coach, follow-up">
+                </div>
+                <div style="margin-bottom:24px;">
+                    <label class="form-label">Notes</label>
+                    <textarea id="f_notes" class="form-input" rows="3" style="resize:vertical;" placeholder="Any notes about this lead..."></textarea>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button type="submit" class="btn-primary" style="flex:1; justify-content:center;">Save Lead</button>
+                    <button type="button" onclick="closeModal()" class="btn-secondary" style="flex:1; justify-content:center;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div id="loadingOverlay" style="display:none; position:fixed; inset:0; background:rgba(255,255,255,0.8); z-index:60; align-items:center; justify-content:center;">
+    <div style="display:flex; align-items:center; gap:12px;">
+        <div style="width:24px; height:24px; border:2px solid #4f46e5; border-top-color:transparent; border-radius:50%; animation:spin 0.7s linear infinite;"></div>
+        <span style="color:#374151; font-size:0.9rem;">Loading...</span>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" style="display:none; position:fixed; bottom:24px; right:24px; z-index:70; padding:12px 18px; border-radius:10px; box-shadow:0 4px 20px rgba(0,0,0,0.15); font-size:0.85rem; color:white; max-width:320px;"></div>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+#prevBtn:disabled, #nextBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+</style>
+
+<script>
+// ============================================================
+// CONFIG — Replace these two values with your Supabase project
+// ============================================================
+const SUPABASE_URL = 'https://ztnlacrlnzmazfbwqfzs.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_K2tRmbLW7tvKLfejs8LXQg_vRhUrm8w';
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ============================================================
+// STATE
+// ============================================================
+let allLeads = [];
+let filteredLeads = [];
+let selectedIds = new Set();
+let currentPage = 1;
+let pageSize = 25;
+let sortField = 'created_at';
+let sortDir = 'desc';
+let searchQuery = '';
+
+// ============================================================
+// INIT
+// ============================================================
+async function init() {
+    showLoading(true);
+    await fetchLeads();
+    showLoading(false);
+}
+
+// ============================================================
+// SUPABASE CRUD
+// ============================================================
+async function fetchLeads() {
+    const { data, error } = await db.from('leads').select('*').order(sortField, { ascending: sortDir === 'asc' });
+    if (error) { showToast('Error loading leads: ' + error.message, 'error'); return; }
+    allLeads = data || [];
+    populateIndustryFilter();
+    applyFilters();
+}
+
+async function createLead(lead) {
+    const { data, error } = await db.from('leads').insert([lead]).select().single();
+    if (error) { showToast('Error: ' + error.message, 'error'); return null; }
+    return data;
+}
+
+async function updateLead(id, lead) {
+    const { data, error } = await db.from('leads').update(lead).eq('id', id).select().single();
+    if (error) { showToast('Error: ' + error.message, 'error'); return null; }
+    return data;
+}
+
+async function deleteLead(id) {
+    const { error } = await db.from('leads').delete().eq('id', id);
+    if (error) { showToast('Error: ' + error.message, 'error'); return false; }
+    return true;
+}
+
+async function deleteLeads(ids) {
+    const { error } = await db.from('leads').delete().in('id', ids);
+    if (error) { showToast('Error: ' + error.message, 'error'); return false; }
+    return true;
+}
+
+// ============================================================
+// SEARCH & FILTER
+// ============================================================
+function handleSearch() {
+    searchQuery = document.getElementById('searchInput').value.toLowerCase();
+    currentPage = 1;
+    applyFilters();
+}
+
+function applyFilters() {
+    const status   = document.getElementById('filterStatus').value;
+    const owner    = document.getElementById('filterOwner').value;
+    const source   = document.getElementById('filterSource').value;
+    const industry = document.getElementById('filterIndustry').value;
+
+    filteredLeads = allLeads.filter(l => {
+        const q = searchQuery;
+        const matchQ = !q || [l.first_name, l.last_name, l.email, l.company, l.title, l.city, l.industry, l.tags, l.notes]
+            .some(v => v && v.toLowerCase().includes(q));
+        return matchQ
+            && (!status   || l.status   === status)
+            && (!owner    || l.owner    === owner)
+            && (!source   || l.source   === source)
+            && (!industry || l.industry === industry);
+    });
+
+    currentPage = 1;
+    renderTable();
+    renderPagination();
+}
+
+function clearFilters() {
+    ['filterStatus','filterOwner','filterSource','filterIndustry'].forEach(id => document.getElementById(id).value = '');
+    searchQuery = '';
+    document.getElementById('searchInput').value = '';
+    applyFilters();
+}
+
+function toggleFilters() {
+    const p = document.getElementById('filterPanel');
+    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+
+function populateIndustryFilter() {
+    const industries = [...new Set(allLeads.map(l => l.industry).filter(Boolean))].sort();
+    const sel = document.getElementById('filterIndustry');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">All Industries</option>';
+    industries.forEach(i => {
+        const o = document.createElement('option');
+        o.value = i; o.textContent = i;
+        if (i === cur) o.selected = true;
+        sel.appendChild(o);
+    });
+}
+
+// ============================================================
+// SORT
+// ============================================================
+function sortBy(field) {
+    sortDir = sortField === field ? (sortDir === 'asc' ? 'desc' : 'asc') : 'asc';
+    sortField = field;
+    document.querySelectorAll('[id^="sort_"]').forEach(el => el.textContent = '');
+    const el = document.getElementById('sort_' + field);
+    if (el) el.textContent = sortDir === 'asc' ? ' ↑' : ' ↓';
+    filteredLeads.sort((a, b) => {
+        const av = String(a[field] || ''), bv = String(b[field] || '');
+        return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    });
+    currentPage = 1;
+    renderTable();
+    renderPagination();
+}
+
+// ============================================================
+// RENDER TABLE
+// ============================================================
+function renderTable() {
+    const tbody = document.getElementById('tableBody');
+    const empty = document.getElementById('emptyState');
+    const start = (currentPage - 1) * pageSize;
+    const page  = filteredLeads.slice(start, start + pageSize);
+
+    if (!filteredLeads.length) {
+        tbody.innerHTML = '';
+        empty.style.display = 'flex';
+        return;
+    }
+    empty.style.display = 'none';
+
+    tbody.innerHTML = page.map(l => {
+        const name     = [l.first_name, l.last_name].filter(Boolean).join(' ') || '—';
+        const initials = [(l.first_name||'')[0],(l.last_name||'')[0]].filter(Boolean).join('').toUpperCase() || '?';
+        const location = [l.city, l.state, l.country].filter(Boolean).join(', ') || '—';
+        const sel      = selectedIds.has(l.id);
+        return `<tr id="row-${l.id}" style="border-bottom:1px solid #f3f4f6; ${sel?'background:#eef2ff;':''}">
+            <td class="table-cell" style="width:40px; padding-left:16px;">
+                <input type="checkbox" ${sel?'checked':''} onchange="toggleRow('${l.id}',this.checked)" onclick="event.stopPropagation()"
+                    style="width:16px; height:16px; accent-color:#4f46e5; cursor:pointer;">
+            </td>
+            <td class="table-cell">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:32px; height:32px; border-radius:50%; background:#eef2ff; color:#4f46e5; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0;">${initials}</div>
+                    <span style="font-weight:500; color:#111827; cursor:pointer;" onmouseover="this.style.color='#4f46e5'" onmouseout="this.style.color='#111827'" onclick="openEditModal('${l.id}')">${name}</span>
+                </div>
+            </td>
+            <td class="table-cell"><span class="truncate-cell" title="${esc(l.title)}">${l.title||'—'}</span></td>
+            <td class="table-cell"><span class="truncate-cell" style="font-weight:500;" title="${esc(l.company)}">${l.company||'—'}</span></td>
+            <td class="table-cell">${l.email ? `<a href="mailto:${esc(l.email)}" style="color:#4f46e5; text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${esc(l.email)}</a>` : '—'}</td>
+            <td class="table-cell">${l.phone||'—'}</td>
+            <td class="table-cell">${statusBadge(l.status)}</td>
+            <td class="table-cell">${ownerBadge(l.owner)}</td>
+            <td class="table-cell">${sourceBadge(l.source)}</td>
+            <td class="table-cell"><span class="truncate-cell" title="${esc(l.industry)}">${l.industry||'—'}</span></td>
+            <td class="table-cell"><span class="truncate-cell" title="${location}">${location}</span></td>
+            <td class="table-cell">${l.linkedin_url ? `<a href="${esc(l.linkedin_url)}" target="_blank" style="color:#4f46e5; font-size:0.75rem; text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">View ↗</a>` : '—'}</td>
+            <td class="table-cell">${l.num_employees||'—'}</td>
+            <td class="table-cell" style="color:#9ca3af; font-size:0.75rem;">${fmtDate(l.last_activity_date)}</td>
+            <td class="table-cell" style="color:#9ca3af; font-size:0.75rem;">${fmtDate(l.created_at)}</td>
+            <td class="table-cell">
+                <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                    ${(l.tags||'').split(',').filter(t=>t.trim()).map(t=>`<span style="background:#f3f4f6; color:#6b7280; padding:2px 8px; border-radius:4px; font-size:0.7rem;">${esc(t.trim())}</span>`).join('')}
+                </div>
+            </td>
+            <td class="table-cell">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <button onclick="openEditModal('${l.id}')" title="Edit" style="background:none; border:none; cursor:pointer; color:#9ca3af; padding:0;" onmouseover="this.style.color='#4f46e5'" onmouseout="this.style.color='#9ca3af'">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    </button>
+                    <button onclick="confirmDelete('${l.id}')" title="Delete" style="background:none; border:none; cursor:pointer; color:#9ca3af; padding:0;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#9ca3af'">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('selectAll').checked = page.length > 0 && page.every(l => selectedIds.has(l.id));
+}
+
+// ============================================================
+// BADGES
+// ============================================================
+const STATUS_COLORS = {
+    'New':            'background:#dbeafe; color:#1d4ed8;',
+    'Contacted':      'background:#fef9c3; color:#92400e;',
+    'Engaged':        'background:#ede9fe; color:#6d28d9;',
+    'Meeting Set':    'background:#e0e7ff; color:#3730a3;',
+    'Qualified':      'background:#dcfce7; color:#166534;',
+    'Not Interested': 'background:#f3f4f6; color:#6b7280;',
+    'Won':            'background:#d1fae5; color:#065f46;',
+    'Lost':           'background:#fee2e2; color:#991b1b;',
+};
+const OWNER_COLORS = {
+    'Rc':     'background:#fce7f3; color:#9d174d;',
+    'Josh':   'background:#dbeafe; color:#1e40af;',
+    'Lauren': 'background:#f3e8ff; color:#6b21a8;',
+    'Chanel': 'background:#ffedd5; color:#9a3412;',
+};
+const SOURCE_COLORS = {
+    'Alignable': 'background:#ccfbf1; color:#0f766e;',
+    'Facebook':  'background:#dbeafe; color:#1d4ed8;',
+    'LinkedIn':  'background:#e0f2fe; color:#0369a1;',
+    'Instagram': 'background:#fce7f3; color:#be185d;',
+    'Referral':  'background:#fef3c7; color:#92400e;',
+};
+
+function statusBadge(s)  { return s ? `<span class="status-badge" style="${STATUS_COLORS[s]||'background:#f3f4f6;color:#6b7280;'}">${esc(s)}</span>` : '—'; }
+function ownerBadge(o)   { return o ? `<span class="status-badge" style="${OWNER_COLORS[o]||'background:#f3f4f6;color:#6b7280;'}">${esc(o)}</span>` : '—'; }
+function sourceBadge(s)  { return s ? `<span class="status-badge" style="${SOURCE_COLORS[s]||'background:#f3f4f6;color:#6b7280;'}">${esc(s)}</span>` : '—'; }
+
+function fmtDate(d) {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ============================================================
+// PAGINATION
+// ============================================================
+function renderPagination() {
+    const total = filteredLeads.length;
+    const totalPages = Math.ceil(total / pageSize) || 1;
+    const start = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+    const end = Math.min(currentPage * pageSize, total);
+
+    document.getElementById('paginationInfo').textContent = total === 0 ? 'No results' : `${start}–${end} of ${total.toLocaleString()}`;
+    document.getElementById('prevBtn').disabled = currentPage <= 1;
+    document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+
+    const pn = document.getElementById('pageNumbers');
+    pn.innerHTML = '';
+    getPages(currentPage, totalPages).forEach(p => {
+        if (p === '…') {
+            pn.innerHTML += `<span style="padding:0 4px; color:#9ca3af; font-size:0.8rem;">…</span>`;
+        } else {
+            const active = p === currentPage;
+            pn.innerHTML += `<button onclick="goToPage(${p})" style="width:32px; height:32px; font-size:0.8rem; border-radius:6px; border:${active?'none':'1px solid #d1d5db'}; background:${active?'#4f46e5':'white'}; color:${active?'white':'#374151'}; cursor:pointer;">${p}</button>`;
+        }
+    });
+}
+
+function getPages(c, t) {
+    if (t <= 7) return Array.from({length:t},(_,i)=>i+1);
+    if (c <= 4) return [1,2,3,4,5,'…',t];
+    if (c >= t-3) return [1,'…',t-4,t-3,t-2,t-1,t];
+    return [1,'…',c-1,c,c+1,'…',t];
+}
+
+function prevPage() { if (currentPage > 1) { currentPage--; renderTable(); renderPagination(); } }
+function nextPage() { const t = Math.ceil(filteredLeads.length/pageSize); if (currentPage < t) { currentPage++; renderTable(); renderPagination(); } }
+function goToPage(p) { currentPage = p; renderTable(); renderPagination(); }
+function changePageSize() { pageSize = parseInt(document.getElementById('pageSize').value); currentPage = 1; renderTable(); renderPagination(); }
+
+// ============================================================
+// SELECTION
+// ============================================================
+function toggleRow(id, checked) {
+    checked ? selectedIds.add(id) : selectedIds.delete(id);
+    const row = document.getElementById('row-' + id);
+    if (row) row.style.background = checked ? '#eef2ff' : '';
+    updateBulkBar();
+}
+
+function toggleSelectAll() {
+    const checked = document.getElementById('selectAll').checked;
+    const start = (currentPage-1)*pageSize;
+    filteredLeads.slice(start, start+pageSize).forEach(l => {
+        checked ? selectedIds.add(l.id) : selectedIds.delete(l.id);
+    });
+    renderTable();
+    updateBulkBar();
+}
+
+function clearSelection() { selectedIds.clear(); renderTable(); updateBulkBar(); }
+
+function updateBulkBar() {
+    const bar = document.getElementById('bulkBar');
+    if (selectedIds.size > 0) {
+        bar.style.display = 'flex';
+        document.getElementById('bulkCount').textContent = `${selectedIds.size} selected`;
+    } else {
+        bar.style.display = 'none';
+    }
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+const FIELDS = ['first_name','last_name','title','company','email','phone','linkedin_url','city','state','country','industry','num_employees','status','owner','source','tags','notes'];
+
+function openAddModal() {
+    document.getElementById('modalTitle').textContent = 'Add Lead';
+    document.getElementById('leadId').value = '';
+    document.getElementById('leadForm').reset();
+    document.getElementById('modalOverlay').style.display = 'flex';
+}
+
+function openEditModal(id) {
+    const l = allLeads.find(x => x.id === id);
+    if (!l) return;
+    document.getElementById('modalTitle').textContent = 'Edit Lead';
+    document.getElementById('leadId').value = id;
+    FIELDS.forEach(f => { const el = document.getElementById('f_'+f); if (el) el.value = l[f]||''; });
+    document.getElementById('modalOverlay').style.display = 'flex';
+}
+
+function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
+function handleOverlayClick(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+
+async function handleFormSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById('leadId').value;
+    const lead = {};
+    FIELDS.forEach(f => { lead[f] = document.getElementById('f_'+f).value || null; });
+    lead.last_activity_date = new Date().toISOString();
+
+    showLoading(true);
+    if (id) {
+        const updated = await updateLead(id, lead);
+        if (updated) {
+            const i = allLeads.findIndex(x => x.id === id);
+            if (i !== -1) allLeads[i] = { ...allLeads[i], ...updated };
+            showToast('Lead updated');
+        }
+    } else {
+        const created = await createLead(lead);
+        if (created) { allLeads.unshift(created); showToast('Lead added'); }
+    }
+    showLoading(false);
+    closeModal();
+    populateIndustryFilter();
+    applyFilters();
+}
+
+// ============================================================
+// DELETE
+// ============================================================
+async function confirmDelete(id) {
+    if (!confirm('Delete this lead? This cannot be undone.')) return;
+    showLoading(true);
+    if (await deleteLead(id)) {
+        allLeads = allLeads.filter(l => l.id !== id);
+        selectedIds.delete(id);
+        showToast('Lead deleted');
+        applyFilters();
+        updateBulkBar();
+    }
+    showLoading(false);
+}
+
+async function bulkDelete() {
+    if (!selectedIds.size || !confirm(`Delete ${selectedIds.size} lead(s)? This cannot be undone.`)) return;
+    showLoading(true);
+    const ids = [...selectedIds];
+    if (await deleteLeads(ids)) {
+        allLeads = allLeads.filter(l => !ids.includes(l.id));
+        selectedIds.clear();
+        showToast(`${ids.length} leads deleted`);
+        applyFilters();
+        updateBulkBar();
+    }
+    showLoading(false);
+}
+
+// ============================================================
+// IMPORT / EXPORT CSV
+// ============================================================
+const CSV_FIELDS = ['first_name','last_name','title','company','email','phone','linkedin_url','city','state','country','industry','num_employees','status','owner','source','tags','notes','created_at'];
+
+function exportCSV() {
+    const leads = selectedIds.size > 0 ? allLeads.filter(l => selectedIds.has(l.id)) : filteredLeads;
+    if (!leads.length) { showToast('Nothing to export', 'error'); return; }
+    const rows = leads.map(l => CSV_FIELDS.map(f => `"${String(l[f]||'').replace(/"/g,'""')}"`).join(','));
+    const csv = [CSV_FIELDS.join(','), ...rows].join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+    a.download = 'echelon-leads.csv';
+    a.click();
+    showToast(`Exported ${leads.length} leads`);
+}
+
+async function importCSV(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    const lines = text.split('\n').filter(l => l.trim());
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
+    const rows = lines.slice(1).map(line => {
+        const vals = [];
+        let inQ = false, cur = '';
+        for (const ch of line + ',') {
+            if (ch === '"') inQ = !inQ;
+            else if (ch === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
+            else cur += ch;
+        }
+        const obj = {};
+        headers.forEach((h, i) => { obj[h] = (vals[i]||'').replace(/""/g,'"'); });
+        return obj;
+    }).filter(r => r.first_name || r.last_name || r.email);
+
+    if (!rows.length) { showToast('No valid rows found', 'error'); return; }
+    if (!confirm(`Import ${rows.length} leads?`)) return;
+
+    showLoading(true);
+    const { data, error } = await db.from('leads').insert(rows).select();
+    if (error) { showToast('Import error: ' + error.message, 'error'); }
+    else {
+        allLeads = [...(data||[]), ...allLeads];
+        showToast(`Imported ${(data||[]).length} leads`);
+        populateIndustryFilter();
+        applyFilters();
+    }
+    showLoading(false);
+    event.target.value = '';
+}
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+function showLoading(show) {
+    document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+}
+
+let toastTimer;
+function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = type === 'error' ? '#dc2626' : '#111827';
+    t.style.display = 'block';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+
+function activateSidebar(el) {
+    document.querySelectorAll('.sidebar-icon').forEach(e => e.classList.remove('active'));
+    el.classList.add('active');
+}
+
+// ============================================================
+// START
+// ============================================================
+init();
+</script>
+</body>
+</html>
