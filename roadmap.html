@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Echelon — Execution Roadmap</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --gold: #D4AF37;
+    --beige: #F7F6F3;
+    --dark: #0F0F0F;
+    --card: #FFFFFF;
+    --muted: #ECEAE6;
+    --text-muted: #888;
+  }
+  body {
+    background: var(--beige);
+    font-family: 'Georgia', serif;
+    color: var(--dark);
+    min-height: 100vh;
+  }
+  header {
+    border-bottom: 2px solid var(--gold);
+    padding: 32px 48px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .header-eyebrow {
+    font-family: monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .header-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+  .header-right {
+    text-align: right;
+  }
+  .total-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .total-hours {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+  .total-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--muted);
+    padding: 0 48px;
+    background: var(--card);
+  }
+  .tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 16px 24px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-family: 'Georgia', serif;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+  }
+  .tab-btn.active {
+    border-bottom: 2px solid var(--gold);
+    color: var(--dark);
+    font-weight: 700;
+  }
+  .tab-sub {
+    font-size: 10px;
+    color: #aaa;
+    margin-left: 6px;
+  }
+  .content {
+    padding: 40px 48px;
+  }
+  .progress-bar {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 32px;
+  }
+  .progress-seg {
+    height: 4px;
+    flex: 1;
+    background: var(--muted);
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.2s;
+  }
+  .progress-seg.active {
+    background: var(--gold);
+  }
+  .item-card {
+    background: var(--card);
+    border: 2px solid var(--muted);
+    padding: 24px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 4px;
+  }
+  .item-card:hover {
+    border-color: #ccc;
+  }
+  .item-card.active {
+    border-color: var(--gold);
+  }
+  .item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .item-num {
+    font-family: monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+  .item-title {
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .item-owner {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .badge {
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-family: monospace;
+  }
+  .badge-critical { background: #fef3c7; color: #92400e; }
+  .badge-high { background: #e0f2fe; color: #075985; }
+  .badge-medium { background: var(--muted); color: #555; }
+  .badge-exec-high { background: #e8f5e8; color: #166534; }
+  .badge-exec-medium { background: #fff7ed; color: #9a3412; }
+  .badge-exec-low { background: #fef2f2; color: #991b1b; }
+  .item-note {
+    font-size: 13px;
+    color: #777;
+    font-style: italic;
+  }
+  .item-detail {
+    display: none;
+    margin-top: 20px;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .item-card.active .item-detail {
+    display: grid;
+  }
+  .detail-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .task-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+    align-items: flex-start;
+  }
+  .dot {
+    width: 6px;
+    height: 6px;
+    background: var(--gold);
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+  .task-text {
+    font-size: 13px;
+    color: #444;
+    line-height: 1.5;
+  }
+  .metric-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--muted);
+    font-size: 12px;
+  }
+  .metric-label {
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-size: 10px;
+  }
+  .metric-val {
+    font-weight: 700;
+  }
+  .note-box {
+    margin-top: 16px;
+    background: var(--dark);
+    padding: 14px 16px;
+    border-left: 3px solid var(--gold);
+  }
+  .note-box-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .note-box-text {
+    font-size: 13px;
+    color: #ccc;
+    font-style: italic;
+  }
+  .phase-note {
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: var(--card);
+    border: 1px solid var(--muted);
+    border-left: 3px solid var(--gold);
+    font-size: 13px;
+    color: #555;
+    font-style: italic;
+  }
+  footer {
+    border-top: 1px solid var(--muted);
+    padding: 20px 48px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="header-eyebrow">Echelon — Build Roadmap</div>
+    <h1>Execution Roadmap</h1>
+    <div class="header-sub">April 28, 2026 · Feed to Claude Code · Lauren's action items unless delegated</div>
+  </div>
+  <div class="header-right">
+    <div class="total-label">Total estimate</div>
+    <div class="total-hours">67–104 hrs</div>
+    <div class="total-sub">~2–3 weeks at pace</div>
+  </div>
+</header>
+
+<div class="tabs" id="tabs"></div>
+
+<div class="content">
+  <div class="progress-bar" id="progress-bar"></div>
+  <div id="items-container"></div>
+  <div class="phase-note" id="phase-note"></div>
+</div>
+
+<footer>
+  <span>ECHELON · INTERNAL USE ONLY</span>
+  <span>Lauren's action items unless delegated · Feed to Claude Code</span>
+</footer>
+
+<script>
+const phases = [
+  {
+    label: 'Phase 1: Foundation',
+    sub: 'Weeks 1–3',
+    note: '⚠ Stop after item 04. Test with a real client before building phase 2.',
+    items: [
+      {
+        num:'01', title:'Audit local OpenClaw setup', hours:'2–3 hrs',
+        priority:'Critical', exec:'High', necessity:'Essential', owner:'Lauren',
+        tasks:[
+          'SSH into localhost:18789',
+          'Export SOUL.md, USER.md, IDENTITY.md',
+          'Export config.yaml — model, fallback, MCP servers',
+          'Document mcp_servers/ and skills/ folder structure',
+          'Map file hierarchy and identify conflicts',
+          'Understand what persists vs. what is ephemeral'
+        ],
+        note:'Prerequisite for everything else. Do not skip.'
+      },
+      {
+        num:'02', title:'Design wrapper UI spec', hours:'4–6 hrs',
+        priority:'Critical', exec:'High', necessity:'Essential', owner:'Lauren',
+        tasks:[
+          'Sketch CEO view — outcomes only',
+          'Sketch ops person view — full depth + debugging',
+          'Define controls: start/stop, reasoning view, parameters',
+          'Map each UI element to its OpenClaw API call',
+          'Document error states and how they surface',
+          'Design session history view'
+        ],
+        note:'Wrapper is your moat. Get the spec right before building.'
+      },
+      {
+        num:'03', title:'Build the wrapper', hours:'20–30 hrs',
+        priority:'Critical', exec:'Medium', necessity:'Essential', owner:'Lauren + Claude Code',
+        tasks:[
+          'Set up Next.js project with auth',
+          'Build API layer talking to OpenClaw locally',
+          'CEO dashboard — outcomes, status, high-level metrics',
+          'Ops dashboard — logs, reasoning, full controls',
+          'Session history view',
+          'Error state handling with recovery suggestions',
+          'Deploy to client VPS at client-domain.com',
+          'Test against Twain (existing Girdley setup)'
+        ],
+        note:'Ship ugly first, polish after first paying client gives feedback.'
+      },
+      {
+        num:'04', title:'Land first Scale client', hours:'8–10 hrs',
+        priority:'Critical', exec:'High', necessity:'Essential', owner:'RC + Lauren',
+        tasks:[
+          'Target: Bryant (Elevate & Delegate) or next warm lead',
+          'Provision Hetzner VPS for client',
+          'Deploy OpenClaw + wrapper on their VPS',
+          'Walk client through the dashboard',
+          'Monitor first 2 weeks for stability',
+          'Collect feedback — what is missing, what is confusing',
+          'Document onboarding process for repeatability'
+        ],
+        note:'Stop here. Test with real money before building phase 2.'
+      }
+    ]
+  },
+  {
+    label: 'Phase 2: Intelligence',
+    sub: 'Weeks 4–6',
+    note: 'Build only after first Scale client is live and you have seen real failure patterns.',
+    items: [
+      {
+        num:'05', title:'Three-tier watchdog system', hours:'15–20 hrs',
+        priority:'High', exec:'Medium', necessity:'High', owner:'Lauren + Claude Code',
+        tasks:[
+          'Tier 3: Per-file watchers on SOUL, CONFIG, MEMORY, SKILLS',
+          'Fire instantly on file change via inotify (not cron)',
+          'Tier 2: Per-VPS aggregator — reasons across Tier 3 reports',
+          'Tier 1: Notification layer — summary + recommended action',
+          'Implement rollback suggestion when conflict detected',
+          'Log all changes with diffs and timestamps'
+        ],
+        note:'Design Tier 1 output first, then build downward. Top-down.'
+      },
+      {
+        num:'06', title:'Smart failure handling', hours:'10–15 hrs',
+        priority:'High', exec:'Medium', necessity:'High', owner:'Lauren + Claude Code',
+        tasks:[
+          'Build error parsing layer — read error codes deeply',
+          'Web search fallback on unknown errors',
+          'Agent checks own memory: did this work before?',
+          'Propose 3 potential fixes before escalating to human',
+          'Escalate with diagnosis, not just "failed"',
+          'Never retry blindly — reason about why it failed'
+        ],
+        note:'Agents that don\'t mysteriously break. This justifies the $3K/mo price.'
+      },
+      {
+        num:'07', title:'Master ops agent', hours:'10–15 hrs',
+        priority:'High', exec:'Medium', necessity:'High', owner:'Lauren + Claude Code',
+        tasks:[
+          'Local Echelon agent on your Mac — Tailscale access to all VPS',
+          'Each client VPS has its own dedicated Echelon agent',
+          'Client agent monitors runtime and proposes fixes',
+          'Master agent reviews proposal — approve or reject',
+          'Auto-deploy if confidence above 95%',
+          'Flag for manual review if ambiguous or high-risk'
+        ],
+        note:'You become a decision-maker, not a debugger.'
+      }
+    ]
+  },
+  {
+    label: 'Phase 3: Scale',
+    sub: 'Weeks 7–10',
+    note: 'Build only after hitting real limitations with multiple clients. Don\'t gold-plate before you have the problems.',
+    items: [
+      {
+        num:'08', title:'Sandbox Docker testing', hours:'10–15 hrs',
+        priority:'Medium', exec:'Medium', necessity:'Medium', owner:'Lauren + Claude Code',
+        tasks:[
+          'Lazy-spawn Docker sandbox only when a problem surfaces',
+          'Sync prod state to sandbox on problem detection',
+          'Apply proposed fix in sandbox first',
+          'Run validation tests against expected behavior',
+          'Deploy to production only when sandbox passes',
+          'Tear down sandbox after successful deploy'
+        ],
+        note:'Never push half-baked fixes to production again.'
+      },
+      {
+        num:'09', title:'Pre-baked agent templates', hours:'15–20 hrs',
+        priority:'Medium', exec:'Low', necessity:'Medium', owner:'Lauren + Claude Code',
+        tasks:[
+          'Define 3 standard agent templates — Content, Ops, Analytics',
+          'Each template = pre-configured SOUL + CONFIG + skills',
+          'Toggle UI in wrapper — one-click activation',
+          'Wrapper auto-spawns agent on toggle',
+          'Each template has its own isolated memory context',
+          'Document template customization for client onboarding'
+        ],
+        note:'Clients flip switches, not config files. This is the UX win.'
+      },
+      {
+        num:'10', title:'Multi-agent orchestration', hours:'20–30 hrs',
+        priority:'Medium', exec:'Low', necessity:'Medium', owner:'Lauren + Claude Code',
+        tasks:[
+          'Separate OpenClaw instances per agent — own port per agent',
+          'Define agent hierarchy: master → specialist → sub-agents',
+          'Delegation model via MCP server calls or webhooks',
+          'Memory isolation — each agent has scoped memory context',
+          'Communication flows through hierarchy, not peer-to-peer',
+          'Escalation rules: sub → specialist → master → human'
+        ],
+        note:'Build this after you hit memory or context walls with real clients.'
+      }
+    ]
+  }
+];
+
+let activePhase = 0;
+let activeItem = null;
+const allItems = phases.flatMap(p => p.items);
+
+function priorityBadgeClass(p) {
+  if (p === 'Critical') return 'badge badge-critical';
+  if (p === 'High') return 'badge badge-high';
+  return 'badge badge-medium';
+}
+
+function execBadgeClass(e) {
+  if (e === 'High') return 'badge badge-exec-high';
+  if (e === 'Medium') return 'badge badge-exec-medium';
+  return 'badge badge-exec-low';
+}
+
+function globalIndex(item) {
+  return allItems.indexOf(item);
+}
+
+function renderTabs() {
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = phases.map((p, i) => `
+    <button class="tab-btn ${i === activePhase ? 'active' : ''}" onclick="switchPhase(${i})">
+      ${p.label}<span class="tab-sub">${p.sub}</span>
+    </button>
+  `).join('');
+}
+
+function renderProgress() {
+  const bar = document.getElementById('progress-bar');
+  bar.innerHTML = allItems.map((item, i) => `
+    <div class="progress-seg ${activeItem === i ? 'active' : ''}"
+      onclick="jumpToItem(${i})"
+      title="${item.num} · ${item.title}">
+    </div>
+  `).join('');
+}
+
+function renderItems() {
+  const container = document.getElementById('items-container');
+  const phase = phases[activePhase];
+  container.innerHTML = phase.items.map(item => {
+    const gi = globalIndex(item);
+    const isActive = activeItem === gi;
+    return `
+      <div class="item-card ${isActive ? 'active' : ''}" onclick="toggleItem(${gi})">
+        <div class="item-header">
+          <div>
+            <div class="item-num">${item.num} · ${item.hours}</div>
+            <div class="item-title">${item.title}</div>
+            <div class="item-owner">Owner: ${item.owner}</div>
+          </div>
+          <div class="badges">
+            <span class="${priorityBadgeClass(item.priority)}">${item.priority}</span>
+            <span class="${execBadgeClass(item.exec)}">Exec: ${item.exec}</span>
+          </div>
+        </div>
+        ${!isActive ? `<div class="item-note">${item.note}</div>` : ''}
+        <div class="item-detail">
+          <div>
+            <div class="detail-label">Tasks</div>
+            ${item.tasks.map(t => `
+              <div class="task-row">
+                <div class="dot"></div>
+                <div class="task-text">${t}</div>
+              </div>
+            `).join('')}
+          </div>
+          <div>
+            <div class="detail-label">Metrics</div>
+            ${[['Hours', item.hours], ['Priority', item.priority], ['Executability', item.exec], ['Necessity', item.necessity], ['Owner', item.owner]].map(([l, v]) => `
+              <div class="metric-row">
+                <span class="metric-label">${l}</span>
+                <span class="metric-val">${v}</span>
+              </div>
+            `).join('')}
+            <div class="note-box">
+              <div class="note-box-label">Note</div>
+              <div class="note-box-text">${item.note}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('phase-note').textContent = phase.note;
+}
+
+function switchPhase(i) {
+  activePhase = i;
+  activeItem = null;
+  renderTabs();
+  renderProgress();
+  renderItems();
+}
+
+function toggleItem(gi) {
+  activeItem = activeItem === gi ? null : gi;
+  const phaseIdx = phases.findIndex(p => p.items.includes(allItems[gi]));
+  if (activePhase !== phaseIdx) {
+    activePhase = phaseIdx;
+    renderTabs();
+  }
+  renderProgress();
+  renderItems();
+}
+
+function jumpToItem(gi) {
+  const phaseIdx = phases.findIndex(p => p.items.includes(allItems[gi]));
+  activePhase = phaseIdx;
+  activeItem = gi;
+  renderTabs();
+  renderProgress();
+  renderItems();
+}
+
+renderTabs();
+renderProgress();
+renderItems();
+</script>
+
+</body>
+</html>
